@@ -161,19 +161,19 @@ Topics already mastered: $masteredListStr
 1. **When the user attaches an image** (you will see `[IMAGE ANALYSIS]` in the prompt):
    - First, clearly describe what the image shows (objects, text, layout).
    - If the image contains educational content (diagram, chart, formula, code, textbook page), teach it like a teacher – explain the concept step by step.
-   - If the image is not educational (e.g., a photo of a cat, a landscape), just describe it naturally and answer any follow‑up question.
+   - If the image is not educational (e.g., a photo of a cat, a landscape), just describe it naturally and answer any follow up question.
    - Do not ask the user what they already know about the image – just teach or explain.
 
-2. **When the user says “I don’t know” or expresses confusion**:
+2. **When the user says "I don't know" or expresses confusion**:
    - Do **not** keep asking probing questions.
    - Immediately teach the topic from the very basics (first principles).
    - Assume zero prior knowledge. Break it down into the smallest pieces.
    - Use simple analogies and short sentences.
-   - After teaching a small chunk, ask **one simple check**: “Does that make sense?” or “Can you repeat that in your own words?”
+   - After teaching a small chunk, ask **one simple check**: "Does that make sense?" or "Can you repeat that in your own words?"
    - Then continue building up.
 
-3. **For normal (text‑only) conversations**:
-   - You may still use Socratic questioning, but if the user says “I don’t know” or seems stuck, switch to direct teaching (as above).
+3. **For normal (text only) conversations**:
+   - You may still use Socratic questioning, but if the user says "I don't know" or seems stuck, switch to direct teaching (as above).
 
 ### YOUR STANDARD TEACHING METHOD (use when user is engaged)
 
@@ -181,17 +181,19 @@ Topics already mastered: $masteredListStr
 2. **Diagnose the missing gap** – then fill it with explanation.
 3. **Teach from first principles** – use short sentences and concrete examples.
 4. **Use analogies with explicit mapping** – discard if not helpful.
-5. **Active recall** – after teaching, ask a focused question. If wrong or “I don’t know”, re‑teach differently.
+5. **Active recall** – after teaching, ask a focused question. If wrong or "I don't know", re teach differently.
 6. **Build up** from sentence to paragraph to full mental model.
 7. **Mastery declaration** (strict criteria) – `[MASTERY_ACHIEVED] Topic Name Here`.
 8. **If user wants to change topic** – acknowledge and save progress.
 
 ### GOLDEN RULES
-- **Never stop teaching** – but adjust your method to the student’s response.
-- **If the user says “I don’t know”, stop questioning and teach from zero.**
-- **Keep explanations short** (2‑4 sentences) unless depth is requested.
+- **Never stop teaching** – but adjust your method to the student's response.
+- **your response must not be more than 4 sentence unless users asks you to discuss in detail** 
+- **If the user says "I don't know", stop questioning and teach from zero.**
+- **Keep explanations short** (2-4 sentences) unless depth is requested.
 - **Be patient, encouraging, and relentlessly focused on filling the missing gap.**
---**when you notice student do not want to answer and the intention is only learing conitnue teaching onlyl**
+- **when you notice student do not want to answer and the intention is only learning continue teaching only**
+- **when students answer a good answers save it in mastery list and says you mastered the topic**
 
 Now begin. When the user asks to learn a topic or attaches an image, follow this protocol perfectly.
 """.trimIndent()
@@ -201,6 +203,19 @@ Now begin. When the user asks to learn a topic or attaches an image, follow this
     // Model picker (only from menu)
     private val pickModel = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { loadModel(it) }
+    }
+
+    // Function to send warm-up message automatically
+    private suspend fun sendWarmupMessage() {
+        try {
+            val warmupResponse = StringBuilder()
+            engine.sendUserPrompt("tell me about your self in short").collect { token ->
+                warmupResponse.append(token)
+            }
+            Log.d("KinMaster", "starting")
+        } catch (e: Exception) {
+            Log.e("KinMaster", "Warm-up failed", e)
+        }
     }
 
     private fun loadModel(modelUri: Uri) {
@@ -221,6 +236,13 @@ Now begin. When the user asks to learn a topic or attaches an image, follow this
                 engine.loadModel(modelFilePath!!)
                 setTutorSystemPrompt()
 
+                // === AUTO WARM-UP: Send "Hello" to initialize the model ===
+                withContext(Dispatchers.Main) {
+                    statusBadge.text = "🔥 Warming up model..."
+                }
+                sendWarmupMessage()
+                // === END OF WARM-UP ===
+
                 withContext(Dispatchers.Main) {
                     isModelReady = true
                     userInputEt.isEnabled = true
@@ -229,7 +251,12 @@ Now begin. When the user asks to learn a topic or attaches an image, follow this
                     userInputEt.hint = "Ask KinMaster..."
                     statusBadge.text = "✅ Model ready"
                     Toast.makeText(this@MainActivity, "Model loaded", Toast.LENGTH_SHORT).show()
-                    // Hide badge after 3 seconds
+
+                    // Add welcome message to chat
+                    messages.add(Message(UUID.randomUUID().toString(), "Hello! I'm KinMaster. What would you like to learn today?", false))
+                    messageAdapter.notifyItemInserted(messages.size - 1)
+                    messagesRv.scrollToPosition(messages.size - 1)
+
                     Handler(Looper.getMainLooper()).postDelayed({
                         statusBadge.visibility = TextView.GONE
                     }, 3000)
