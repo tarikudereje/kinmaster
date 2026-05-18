@@ -87,8 +87,7 @@ The APK is attached to the Kaggle submission. Download it from there.
 
 ## Video Demo
 
-[YouTube link in Kaggle Media Gallery]
-
+https://www.youtube.com/watch?v=p9LSSp5dZEA
 
 ## License
 
