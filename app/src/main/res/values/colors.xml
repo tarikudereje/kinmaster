@@ -1,0 +1,6 @@
+<resources>
+    <color name="primaryColor">#1E88E5</color>
+    <color name="cardBackground">#FFFFFF</color>
+    <color name="iconTint">#757575</color>
+    <color name="statusText">#4CAF50</color>
+</resources>

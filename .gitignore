@@ -1,0 +1,11 @@
+﻿.cxx/
+build/
+.gradle/
+.idea/
+.kotlin/
+*.iml
+local.properties
+.DS_Store
+*.gguf
+*.apk
+Thumbs.db
